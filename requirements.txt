@@ -1,0 +1,10 @@
+numpy
+pytest
+pytest-cov
+pandas
+matplotlib
+astroquery
+astropy
+requests
+scipy
+torch

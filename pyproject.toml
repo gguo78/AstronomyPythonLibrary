@@ -1,0 +1,50 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["skywalker_team23"]
+
+[project]
+name = "skywalker_team23"
+version = "0.0.7"
+
+dependencies = [
+    "numpy", 
+    "pytest", 
+    "pytest-cov", 
+    "pandas",
+    "matplotlib", 
+    "astroquery", 
+    "astropy", 
+    "requests", 
+    "scipy", 
+    "torch"    
+]
+
+authors = [
+  { name="Dean Hazineh", email="dhazineh@g.harvard.edu" },
+  { name="Grace Guo", email="ruyi_guo@g.harvard.edu" },
+  { name="Yilin Qi", email="yilinqi@g.harvard.edu" },
+  { name="Nina Mao", email="ninamao@g.harvard.edu" },
+  { name="Jiayi Xu", email="jxu2@g.harvard.edu" }
+]
+
+description = "A python package assists with the classification task between stars, galaxies and QSOs by interacting with SDSS (Sloan Digital Sky Survey) and retrieving information from the databases."
+
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-cov"
+]
+
+[project.urls]
+"Homepage" = "https://code.harvard.edu/CS107/team23_2023"

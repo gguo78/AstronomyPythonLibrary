@@ -1,0 +1,1 @@
+pip install -i https://test.pypi.org/simple/ Astronomy-Skywalker==0.0.1

@@ -1,0 +1,96 @@
+from astroquery.gaia import Gaia
+import pandas as pd
+
+
+class CrossMatch_Gaia:
+    def __init__(self):
+        """Module to find object/source ids in the Gaia DR3 corresponding to sky patches and return gaia parameters."""
+        return
+
+    def query_gaia(self, query_str):
+        """Query the gaia data realease using ADQL strings
+
+        Args:
+            query_str (str): ADQL string
+
+        Returns:
+            pd.DataFrame: Query result.
+        """
+        job = Gaia.launch_job(query_str)
+        results = job.get_results()
+        return results.to_pandas()
+
+    def match_coords(self, target_ra, target_dec, angular_range, return_top_n=100):
+        """Returns list of object ids in the Gaia database corresponding to a patch of the sky.
+
+        Args:
+            target_ra (float): ra in units of deg
+            target_dec (float): dec in units of deg
+            angular_range (float): angular seperation to match ra,dec vs target ra, dec
+            return_top_n (int, optional): Number of matches to return. Defaults to 100.
+
+        Returns:
+            pd.DataFrame: Dataframe with matches including source_id, ra, dec
+            list: List of sourcids that match the sky patch.
+        """
+        assert isinstance(
+            return_top_n, int
+        ), "top_n number of results must be an integer."
+        query_str = f"""
+            SELECT 
+            TOP {return_top_n}
+            gaia_source.source_id,
+            ra, 
+            dec
+            FROM 
+            gaiadr3.gaia_source 
+            INNER JOIN gaiadr3.vari_cepheid 
+            ON gaiadr3.gaia_source.source_id = gaiadr3.vari_cepheid.source_id
+            WHERE 
+            1=CONTAINS(
+                POINT('ICRS', gaiadr3.gaia_source.ra, gaiadr3.gaia_source.dec),
+                CIRCLE('ICRS', {target_ra}, {target_dec}, {angular_range})
+            )
+        """
+        df = self.query_gaia(query_str)
+        source_ids = list(df["source_id"])
+        return df, source_ids
+
+    def get_astrophysical_params(self, source_ids):
+        """Gets all gaia data from the table astrophysical_parameters given a list of sourceids.
+
+        Args:
+            source_ids (list): list of int sourceids (like from match_coords function).
+
+        Returns:
+            pd.DataFrame: Dataframe result with all columns from the gaiadr3.astrophysical_parameters table
+        """
+        source_id_string = ", ".join(map(str, source_ids))
+        query_str = f"""
+            SELECT 
+            * 
+            FROM 
+            gaiadr3.astrophysical_parameters 
+            WHERE 
+            source_id IN ({source_id_string})
+        """
+        return self.query_gaia(query_str)
+
+    def get_cepheid_star_param(self, source_ids):
+        """Returns the cepheid star parameters given a list of sourceids.
+
+        Args:
+            source_ids (list): list of int sourceids (like from match_coords function).
+
+        Returns:
+            pd.DataFrame: Dataframe result with all columns from the gaiadr3.astrophysical_parameters table joined wih gaiadr3.vari_cepheid
+        """
+        source_id_string = ", ".join(map(str, source_ids))
+        test_q = f"""
+            SELECT astrophysical_parameters.source_id, pf, teff_gspphot, distance_gspphot 
+            FROM gaiadr3.vari_cepheid INNER JOIN gaiadr3.astrophysical_parameters ON gaiadr3.vari_cepheid.source_id = gaiadr3.astrophysical_parameters.source_id
+            WHERE 
+            astrophysical_parameters.source_id IN ({source_id_string})
+        """
+        results = self.query_gaia(test_q)
+        return results
